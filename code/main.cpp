@@ -113,12 +113,35 @@ Point get_centroid(Mat arr){
 
 
 int start_video_capture(Neck *neck){
+  int top_threshold, bottom_threshold, camera_width;
+  float threshold_coefficient;
+  Mat frame;
+  Mat fgMaskMOG2;
+
+
   VideoCapture cap(0); // open the default camera
   if(!cap.isOpened())  // check if we succeeded
     return -1;
 
-  Mat frame;
-  Mat fgMaskMOG2;
+  //Get a new frame from camera because camera width is needed to calculate thresholds
+  cap >> frame;
+  camera_width = frame.size().width;
+
+  printf("Camera width: %d\n", frame.size().width);
+
+  /*Set the threshold_coefficient
+    This threshold coefficient sets the percentage of screen space dedicated to "movement zones".
+
+    If I have a coefficient of .2, that means that 20% of the left & 20% of the right screen is
+    dedicated to movement zones for a total of 40% of movement zone.
+  */
+  threshold_coefficient = 0.3125;
+
+  top_threshold = (int)(camera_width - threshold_coefficient * camera_width);
+  bottom_threshold = (int)(threshold_coefficient * camera_width);
+
+
+
   Ptr<BackgroundSubtractor> pMOG2 = createBackgroundSubtractorMOG2(3); //MOG2 approach
   for(;;)
     {
@@ -129,11 +152,11 @@ int start_video_capture(Neck *neck){
       circle(fgMaskMOG2, centroid, 20, Scalar(255,0,0), 10);
       printf("x: %d\n", centroid.x);
       //1280
-      if(centroid.x > 880){
+      if(centroid.x > top_threshold){
         printf("turning left\n");
         neck->turn_left(20,40);
       }
-      if(centroid.x < 400){
+      if(centroid.x < bottom_threshold){
         printf("turning right\n");
         neck->turn_right(20,40);
       }
@@ -145,7 +168,7 @@ int start_video_capture(Neck *neck){
 
 int main(int argc, char** argv )
 {
-    printf("USING OPENCV Version %d,%d\n",  CV_MAJOR_VERSION, CV_MINOR_VERSION);
+  printf("USING OPENCV Version %d,%d\n",  CV_MAJOR_VERSION, CV_MINOR_VERSION);
   printf("Arduino location: %s\n", argv[1]);
   Neck *neck = new Neck(argv[1]);
   printf("Port is open? %s\n", neck->is_active() ? "true" : "false");
