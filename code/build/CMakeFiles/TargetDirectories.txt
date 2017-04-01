@@ -1,1 +1,0 @@
-/Users/collinbell/taggartcybernetics/server/resources/public/swivel/robot_neck_project_files/code/build/CMakeFiles/DisplayImage.dir
