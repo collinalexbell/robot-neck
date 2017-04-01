@@ -112,7 +112,7 @@ Point get_centroid(Mat arr){
 }
 
 
-int start_video_capture(Neck *neck){
+int start_video_capture(Neck *neck, float c, int d){
   int top_threshold, bottom_threshold, camera_width;
   float threshold_coefficient;
   Mat frame;
@@ -135,13 +135,14 @@ int start_video_capture(Neck *neck){
     If I have a coefficient of .2, that means that 20% of the left & 20% of the right screen is
     dedicated to movement zones for a total of 40% of movement zone.
   */
-  threshold_coefficient = 0.3125;
+  threshold_coefficient = c;
 
   top_threshold = (int)(camera_width - threshold_coefficient * camera_width);
   bottom_threshold = (int)(threshold_coefficient * camera_width);
 
 
 
+  printf("Creating background subtractor\n");
   Ptr<BackgroundSubtractor> pMOG2 = createBackgroundSubtractorMOG2(3); //MOG2 approach
   for(;;)
     {
@@ -154,11 +155,11 @@ int start_video_capture(Neck *neck){
       //1280
       if(centroid.x > top_threshold){
         printf("turning left\n");
-        neck->turn_left(20,40);
+        neck->turn_left(d,40);
       }
       if(centroid.x < bottom_threshold){
         printf("turning right\n");
-        neck->turn_right(20,40);
+        neck->turn_right(d,40);
       }
       imshow("Mask", fgMaskMOG2);
       //if(waitKey(30) >= 0) break;
@@ -166,20 +167,70 @@ int start_video_capture(Neck *neck){
   return 0;
 }
 
+int invalid_usage(){
+  printf("(╯°□°)╯︵ ┻━┻   INVALID USAGE!!!\n");
+  printf("Usage: ./DisplayImage <arduino_port>\n Options:\n -c threshold coefficient (range: 0 - 0.5, default is .3125)\n -d degrees per turn (range: 5-40, default is 20)\n");
+  return 0;
+}
+
 int main(int argc, char** argv )
 {
+  int d,i, temp_d;
+  float c, temp_c;
+
+  //Defaults
+  i=0;
+  c=.3125;
+  d=20;
+
+  if(argc == 1){
+    return invalid_usage();
+  }
+  if((argc > 2 && argc % 2 == 1) || argc > 6){
+       return invalid_usage();
+  }
+  if(argc > 2){
+    std::string::size_type sz;
+    for(i = 0; i<((argc-2)/2); i++){
+      char* ch = (argv[2+(i*2)]);
+      if(!strcmp("-d", ch)){
+        temp_d = (int)stof(argv[3+(i*2)]);
+        if(temp_d < 5 || temp_d > 40){
+          printf("-d is out of range\n");
+          return invalid_usage();
+        }
+        d = temp_d;
+      }
+      else if(!strcmp("-c", ch)){
+        temp_c = stof(argv[3+(i*2)]);
+        if(temp_c < 0.1 || temp_c > 0.45){
+          printf("-c is out of range\n");
+          return invalid_usage();
+        }
+        c = temp_c;
+      }
+      else return invalid_usage();
+    }
+  }
   printf("USING OPENCV Version %d,%d\n",  CV_MAJOR_VERSION, CV_MINOR_VERSION);
-  printf("Arduino location: %s\n", argv[1]);
+  printf("Using rotation increments of %d\n", d);
+  printf("Using threshold coefficient of %f\n", c);
   Neck *neck = new Neck(argv[1]);
-  printf("Port is open? %s\n", neck->is_active() ? "true" : "false");
-  //if(neck->is_active()){
-  //usleep(4000000);
-  //int pos = neck->turn_left(40,40);
-  //printf("pos: %d", pos);
-    //usleep(4000000);
-    //delete neck;
-    //printf("cur_pos:%s\n", neck.turn_left(40,40));
-  //}
-  return start_video_capture(neck);
+  printf("Arduino is connected & port is open? %s\n", neck->is_active() ? "true" : "false");
+  printf(".");
+  fflush(stdout);
+  usleep(1000000);
+  printf(".");
+  fflush(stdout);
+  usleep(1000000);
+  printf(".");
+  fflush(stdout);
+  usleep(1000000);
+  printf(".");
+  fflush(stdout);
+  usleep(1000000);
+  printf("GO!\n");
+
+  return start_video_capture(neck, c, d);
 }
 
