@@ -161,7 +161,7 @@ int start_video_capture(Neck *neck){
         neck->turn_right(20,40);
       }
       imshow("Mask", fgMaskMOG2);
-      if(waitKey(30) >= 0) break;
+      //if(waitKey(30) >= 0) break;
     }
   return 0;
 }
