@@ -43,25 +43,8 @@ public:
     printf("string: %s with size: %d\n", str, write_size);
     boost::asio::write(*port, boost::asio::buffer(str, write_size));
 
-    for(i=0; i<5; i++){
-      boost::asio::read(*port, boost::asio::buffer(c_buf, 1));
-      if(c_buf[0] == '\n'){
-        recieved_result = true;
-        break;
-      }
-      else if(c_buf[0] == '\r'){
-        //pass
-      }
-      else{
-        rv_buf[i] = c_buf[0];
-      }
-    }
-
-    if(!recieved_result){
-      printf("Error parsing current position after re-position\n");
-      //return -1;
-    }
-    rv = atoi(rv_buf);
+    //rv = atoi(rv_buf);
+		rv = 90;
     return rv;
   }
   int turn_right(int amount, int speed){
@@ -78,25 +61,8 @@ public:
     printf("string: %s with size: %d\n", str, write_size);
     boost::asio::write(*port, boost::asio::buffer(str, write_size));
 
-    for(i=0; i<5; i++){
-      boost::asio::read(*port, boost::asio::buffer(c_buf, 1));
-      if(c_buf[0] == '\n'){
-        recieved_result = true;
-        break;
-      }
-      else if(c_buf[0] == '\r'){
-        //pass
-      }
-      else{
-        rv_buf[i] = c_buf[0];
-      }
-    }
-
-    if(!recieved_result){
-      printf("Error parsing current position after re-position\n");
-      //return -1;
-    }
-    rv = atoi(rv_buf);
+    
+    rv = 90;
     return rv;
   }
 
@@ -123,22 +89,23 @@ int start_video_capture(Neck *neck){
   for(;;)
     {
       cap >> frame; // get a new frame from camera
+			printf("frame_size: %d", frame.size().width);
       std::stringstream ss;
       pMOG2->apply(frame, fgMaskMOG2);
       Point centroid = get_centroid(fgMaskMOG2);
       circle(fgMaskMOG2, centroid, 20, Scalar(255,0,0), 10);
       printf("x: %d\n", centroid.x);
       //1280
-      if(centroid.x > 880){
+      if(centroid.x > 450){
         printf("turning left\n");
-        neck->turn_left(20,40);
+        neck->turn_left(10,40);
       }
-      if(centroid.x < 400){
+      if(centroid.x < 200){
         printf("turning right\n");
-        neck->turn_right(20,40);
+        neck->turn_right(10,40);
       }
       imshow("Mask", fgMaskMOG2);
-      if(waitKey(30) >= 0) break;
+     //if(waitKey(30) >= 0) break;
     }
   return 0;
 }
